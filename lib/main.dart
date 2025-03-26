@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'game_board.dart';
+import 'menu_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: GameBoard(),
+      home: const MenuScreen(),
     );
   }
 }
