@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'scores_screen.dart';
+import 'game_board.dart';
+import 'options_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -36,13 +39,10 @@ class MenuScreen extends StatelessWidget {
             Positioned(
               bottom: 0,
               left: -100,
-              child: Opacity(
-                opacity: 1,
-                child: Image.asset(
-                  'lib/assets/logo_caribou.png',
-                  width: 622,
-                  height: 389,
-                ),
+              child: Image.asset(
+                'lib/assets/logo_caribou.png',
+                width: 622,
+                height: 389,
               ),
             ),
 
@@ -56,16 +56,23 @@ class MenuScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     _buildMenuButton("JOUER", () {
-                      // TODO: le jeu
-                      // Navigator.push(context, MaterialPageRoute(builder: (_) => const GameBoard()));
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (_) => const GameBoard()));
                     }),
                     const SizedBox(height: 29),
                     _buildMenuButton("SCORES", () {
-                      // TODO: page scores
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ScoresScreen()),
+                      );
                     }),
                     const SizedBox(height: 29),
                     _buildMenuButton("OPTIONS", () {
-                      // TODO: page options
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OptionsScreen()),
+                      );
                     }),
                   ],
                 ),
