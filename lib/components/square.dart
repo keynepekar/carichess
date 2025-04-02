@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 
-import 'package:chess_game_by_mitch/components/piece.dart';
+import 'package:carichess/components/piece.dart';
 
 class Square extends StatelessWidget {
   final bool isWhite;

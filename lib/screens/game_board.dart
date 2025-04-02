@@ -1,8 +1,8 @@
-import 'package:components/dead_pieces.dart';
-import 'package:components/piece.dart';
-import 'package:components/square.dart';
-import 'package:res/constant/app_colors.dart';
-import 'package:res/helper/helper.dart';
+import 'package:carichess/components/dead_pieces.dart';
+import 'package:carichess/components/piece.dart';
+import 'package:carichess/components/square.dart';
+import 'package:carichess/res/constant/app_colors.dart';
+import 'package:carichess/res/helper/helper.dart';
 import 'package:flutter/material.dart';
 
 class GameBoard extends StatefulWidget {
@@ -70,12 +70,12 @@ class _GameBoardState extends State<GameBoard> {
 //   [null, null, null, null, null, null, null, null]
 // ]
 
-    const String pawnImg = "assets/pawn.png";
-    const String rookImg = "assets/rook.png";
-    const String knightImg = "assets/knight.png";
-    const String bishopImg = "assets/bishop.png";
-    const String queenImg = "assets/queen.png";
-    const String kingImg = "assets/king.png";
+    const String pawnImg = "assets/images/pawn.png";
+    const String rookImg = "assets/images/rook.png";
+    const String knightImg = "assets/images/knight.png";
+    const String bishopImg = "assets/images/bishop.png";
+    const String queenImg = "assets/images/queen.png";
+    const String kingImg = "assets/images/king.png";
 
     // Place pawns
     for (int i = 0; i < 8; i++) {
