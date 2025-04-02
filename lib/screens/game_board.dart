@@ -1,8 +1,8 @@
-import 'package:chess_game_by_mitch/components/dead_pieces.dart';
-import 'package:chess_game_by_mitch/components/piece.dart';
-import 'package:chess_game_by_mitch/components/square.dart';
-import 'package:chess_game_by_mitch/res/constant/app_colors.dart';
-import 'package:chess_game_by_mitch/res/helper.dart';
+import 'package:components/dead_pieces.dart';
+import 'package:components/piece.dart';
+import 'package:components/square.dart';
+import 'package:res/constant/app_colors.dart';
+import 'package:res/helper/helper.dart';
 import 'package:flutter/material.dart';
 
 class GameBoard extends StatefulWidget {

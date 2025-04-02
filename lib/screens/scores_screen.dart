@@ -1,110 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class OptionsScreen extends StatefulWidget {
-  const OptionsScreen({super.key});
+class ScoresScreen extends StatefulWidget {
+  const ScoresScreen({super.key});
 
   @override
-  State<OptionsScreen> createState() => _OptionsScreenState();
+  State<ScoresScreen> createState() => _ScoresScreenState();
 }
 
-class _OptionsScreenState extends State<OptionsScreen> {
-  final _player1Controller = TextEditingController();
-  final _player2Controller = TextEditingController();
-  final _timerController = TextEditingController();
+class _ScoresScreenState extends State<ScoresScreen> {
+  Map<String, int> scores = {};
 
   @override
   void initState() {
     super.initState();
-    _loadOptions();
+    _loadScores();
   }
 
-  Future<void> _loadOptions() async {
+  Future<void> _loadScores() async {
     final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
 
-    // todo: discuter des valeurs par défaut
-    if (!prefs.containsKey('player1')) {
-      await prefs.setString('player1', 'Joueur 1');
-    }
-    if (!prefs.containsKey('player2')) {
-      await prefs.setString('player2', 'Joueur 2');
-    }
-    if (!prefs.containsKey('timer')) {
-      await prefs.setInt('timer', 5);
+    final loadedScores = <String, int>{};
+    for (var key in keys) {
+      final value = prefs.getInt(key) ?? 0;
+      loadedScores[key] = value;
     }
 
-    _player1Controller.text = prefs.getString('player1')!;
-    _player2Controller.text = prefs.getString('player2')!;
-    _timerController.text = prefs.getInt('timer')!.toString();
-  }
-
-  Future<void> _saveOptions() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setString('player1', _player1Controller.text.isNotEmpty
-        ? _player1Controller.text
-        : 'Joueur 1');
-
-    await prefs.setString('player2', _player2Controller.text.isNotEmpty
-        ? _player2Controller.text
-        : 'Joueur 2');
-
-    final timerValue = int.tryParse(_timerController.text);
-    if (timerValue != null && timerValue >= 1 && timerValue <= 60) {
-      await prefs.setInt('timer', timerValue);
-    } else {
-      await prefs.setInt('timer', 5); // fallback valeur par défaut si mauvais input
-      setState(() {
-        _timerController.text = '5';
-      });
-    }
-  }
-
-  Widget _buildInputField(String label, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontFamily: 'November',
-            fontSize: 20,
-            height: 1.75,
-            letterSpacing: 1.0,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: 265,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'November',
-              fontSize: 20,
-              color: Colors.white,
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12),
-            ),
-          ),
-        ),
-      ],
-    );
+    setState(() {
+      scores = loadedScores;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final scoreText = scores.entries
+        .map((entry) => '${entry.key} : ${entry.value}')
+        .join('\n');
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -122,7 +55,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
             Align(
               alignment: const Alignment(0, -0.85),
               child: Image.asset(
-                'lib/assets/logo_texte.png',
+                'assets/images/logo_texte.png',
                 width: 360,
                 height: 225,
                 fit: BoxFit.contain,
@@ -134,20 +67,19 @@ class _OptionsScreenState extends State<OptionsScreen> {
               bottom: 0,
               left: -100,
               child: Image.asset(
-                'lib/assets/logo_caribou.png',
+                'assets/images/logo_caribou.png',
                 width: 622,
                 height: 389,
               ),
             ),
 
-            // Zone options
+            // zone scoreboard
             Positioned(
               top: MediaQuery.of(context).size.height / 2 - 232 + 100,
               left: (MediaQuery.of(context).size.width - 320) / 2,
               child: Container(
                 width: 320,
                 height: 464,
-                padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
                   color: const Color(0x80CD61FF),
                   borderRadius: BorderRadius.circular(40),
@@ -160,10 +92,10 @@ class _OptionsScreenState extends State<OptionsScreen> {
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    const SizedBox(height: 20),
                     const Text(
-                      'OPTIONS',
+                      'SCORES',
                       style: TextStyle(
                         fontFamily: 'November',
                         fontSize: 20,
@@ -178,16 +110,33 @@ class _OptionsScreenState extends State<OptionsScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 35),
-                    _buildInputField("Nom Joueur 1", _player1Controller),
-                    const SizedBox(height: 35),
-                    _buildInputField("Nom Joueur 2", _player2Controller),
-                    const SizedBox(height: 35),
-                    _buildInputField(
-                      "Temps de partie",
-                      _timerController,
-                      keyboardType: TextInputType.number,
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          scoreText.isEmpty
+                              ? 'Aucun score pour le moment'
+                              : scoreText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'November',
+                            fontSize: 20,
+                            height: 1.75,
+                            letterSpacing: 1.0,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 2),
+                                blurRadius: 2,
+                                color: Colors.black45,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -200,10 +149,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
               right: 0,
               child: Center(
                 child: GestureDetector(
-                  onTap: () async {
-                    await _saveOptions();
-                    Navigator.pop(context);
-                  },
+                  onTap: () => Navigator.pop(context),
                   child: Container(
                     width: 284,
                     height: 35,

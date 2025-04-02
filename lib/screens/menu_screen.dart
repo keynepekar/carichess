@@ -28,7 +28,7 @@ class MenuScreen extends StatelessWidget {
             Align(
               alignment: const Alignment(0, -0.85),
               child: Image.asset(
-                'lib/assets/logo_texte.png',
+                'assets/images/logo_texte.png',
                 width: 360,
                 height: 225,
                 fit: BoxFit.contain,
@@ -40,7 +40,7 @@ class MenuScreen extends StatelessWidget {
               bottom: 0,
               left: -100,
               child: Image.asset(
-                'lib/assets/logo_caribou.png',
+                'assets/images/logo_caribou.png',
                 width: 622,
                 height: 389,
               ),
