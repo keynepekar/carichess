@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/chess_game_flutter.iml" filepath="$PROJECT_DIR$/chess_game_flutter.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/chess_game_flutter_android.iml" filepath="$PROJECT_DIR$/android/chess_game_flutter_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/carichess.iml" filepath="$PROJECT_DIR$/carichess.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/carichess_android.iml" filepath="$PROJECT_DIR$/android/carichess_android.iml" />
     </modules>
   </component>
 </project>

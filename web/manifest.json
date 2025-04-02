@@ -1,6 +1,6 @@
 {
-    "name": "chess_game_flutter",
-    "short_name": "chess_game_flutter",
+    "name": "carichess",
+    "short_name": "carichess",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
