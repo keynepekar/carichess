@@ -63,13 +63,13 @@ class _ScoresScreenState extends State<ScoresScreen> {
             ),
 
             // Logo caribou
-            Positioned(
-              bottom: 0,
-              left: -100,
+            Align(
+              alignment: Alignment.bottomCenter,
               child: Image.asset(
                 'assets/images/logo_caribou.png',
                 width: 622,
                 height: 389,
+                fit: BoxFit.contain,
               ),
             ),
 
