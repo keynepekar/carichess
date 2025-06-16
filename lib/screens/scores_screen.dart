@@ -19,13 +19,14 @@ class _ScoresScreenState extends State<ScoresScreen> {
 
   Future<void> _loadScores() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys();
 
-    final loadedScores = <String, int>{};
-    for (var key in keys) {
-      final value = prefs.getInt(key) ?? 0;
-      loadedScores[key] = value;
-    }
+    final player1 = prefs.getString('player1') ?? 'Joueur 1';
+    final player2 = prefs.getString('player2') ?? 'Joueur 2';
+
+    final loadedScores = <String, int>{
+      player1: prefs.getInt(player1) ?? 0,
+      player2: prefs.getInt(player2) ?? 0,
+    };
 
     setState(() {
       scores = loadedScores;

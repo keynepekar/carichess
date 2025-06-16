@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:carichess/components/dead_pieces.dart';
 import 'package:carichess/components/piece.dart';
 import 'package:carichess/components/square.dart';
 import 'package:carichess/res/constant/app_colors.dart';
 import 'package:carichess/res/helper/helper.dart';
+import 'package:carichess/res/helper/score_manager.dart';
+import 'package:carichess/screens/menu_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameBoard extends StatefulWidget {
   const GameBoard({super.key});
@@ -47,13 +51,106 @@ class _GameBoardState extends State<GameBoard> {
   List<int> blackKingPosition = [0, 4];
   bool checkStatus = false;
 
+  // --- NOUVEAU ---
+  String player1Name = '';
+  String player2Name = '';
+  int wins1 = 0;
+  int wins2 = 0;
+  int initialSeconds = 0;
+  int whiteRemaining = 0;
+  int blackRemaining = 0;
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
     _initializeBoard();
+    _loadGameOptions(); // charge noms, victoires et timer
   }
 
-// INITIALIZE BOARD
+  Future<void> _loadGameOptions() async {
+    final prefs = await SharedPreferences.getInstance();
+    player1Name = prefs.getString('player1') ?? 'Joueur 1';
+    player2Name = prefs.getString('player2') ?? 'Joueur 2';
+    wins1 = prefs.getInt(player1Name) ?? 0;
+    wins2 = prefs.getInt(player2Name) ?? 0;
+    final timerVal = prefs.getInt('timer') ?? 5;
+    initialSeconds = timerVal * 60;
+    whiteRemaining = blackRemaining = initialSeconds;
+    setState(() {});
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      setState(() {
+        if (isWhiteTurn) {
+          if (whiteRemaining > 0) whiteRemaining--;
+        } else {
+          if (blackRemaining > 0) blackRemaining--;
+        }
+      });
+
+      // Quand le temps blanc est écoulé -> victoire noir
+      if (whiteRemaining == 0) {
+        _timer?.cancel();
+        await incrementScore(player2Name);
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            title: Text("$player2Name remporte la partie par manque de temps !"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MenuScreen()),
+                  );
+                },
+                child: const Text("Menu"),
+              ),
+            ],
+          ),
+        );
+      }
+      // Quand le temps noir est écoulé -> victoire blanc
+      else if (blackRemaining == 0) {
+        _timer?.cancel();
+        await incrementScore(player1Name);
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            title: Text("$player1Name remporte la partie par manque de temps !"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MenuScreen()),
+                  );
+                },
+                child: const Text("Menu"),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+  }
+
+  String _formatTime(int sec) {
+    final m = (sec ~/ 60).toString().padLeft(2, '0');
+    final s = (sec % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+  // --- FIN NOUVEAU ---
+
+  // INITIALIZE BOARD
   void _initializeBoard() {
     List<List<ChessPiece?>> newBoard =
         List.generate(8, (index) => List.generate(8, (index) => null));
@@ -70,24 +167,17 @@ class _GameBoardState extends State<GameBoard> {
 //   [null, null, null, null, null, null, null, null]
 // ]
 
-    const String pawnImg = "assets/images/pawn.png";
-    const String rookImg = "assets/images/rook.png";
-    const String knightImg = "assets/images/knight.png";
-    const String bishopImg = "assets/images/bishop.png";
-    const String queenImg = "assets/images/queen.png";
-    const String kingImg = "assets/images/king.png";
-
     // Place pawns
     for (int i = 0; i < 8; i++) {
       newBoard[1][i] = ChessPiece(
         type: ChessPieceType.pawn,
         isWhite: false,
-        img: pawnImg,
+        img: 'assets/images/pieces/pawn_b.png',
       );
       newBoard[6][i] = ChessPiece(
         type: ChessPieceType.pawn,
         isWhite: true,
-        img: pawnImg,
+        img: 'assets/images/pieces/pawn_w.png',
       );
     }
 
@@ -95,90 +185,90 @@ class _GameBoardState extends State<GameBoard> {
     newBoard[0][0] = ChessPiece(
       type: ChessPieceType.rook,
       isWhite: false,
-      img: rookImg,
+      img: 'assets/images/pieces/rook_b.png',
     );
     newBoard[0][7] = ChessPiece(
       type: ChessPieceType.rook,
       isWhite: false,
-      img: rookImg,
+      img: 'assets/images/pieces/rook_b.png',
     );
     newBoard[7][0] = ChessPiece(
       type: ChessPieceType.rook,
       isWhite: true,
-      img: rookImg,
+      img: 'assets/images/pieces/rook_w.png',
     );
     newBoard[7][7] = ChessPiece(
       type: ChessPieceType.rook,
       isWhite: true,
-      img: rookImg,
+      img: 'assets/images/pieces/rook_w.png',
     );
 
     // Place knights
     newBoard[0][1] = ChessPiece(
       type: ChessPieceType.knight,
       isWhite: false,
-      img: knightImg,
+      img: 'assets/images/pieces/knight_b.png',
     );
     newBoard[0][6] = ChessPiece(
       type: ChessPieceType.knight,
       isWhite: false,
-      img: knightImg,
+      img: 'assets/images/pieces/knight_b.png',
     );
     newBoard[7][1] = ChessPiece(
       type: ChessPieceType.knight,
       isWhite: true,
-      img: knightImg,
+      img: 'assets/images/pieces/knight_w.png',
     );
     newBoard[7][6] = ChessPiece(
       type: ChessPieceType.knight,
       isWhite: true,
-      img: knightImg,
+      img: 'assets/images/pieces/knight_w.png',
     );
 
     // Place bishops
     newBoard[0][2] = ChessPiece(
       type: ChessPieceType.bishop,
       isWhite: false,
-      img: bishopImg,
+      img: 'assets/images/pieces/bishop_b.png',
     );
     newBoard[0][5] = ChessPiece(
       type: ChessPieceType.bishop,
       isWhite: false,
-      img: bishopImg,
+      img: 'assets/images/pieces/bishop_b.png',
     );
     newBoard[7][2] = ChessPiece(
       type: ChessPieceType.bishop,
       isWhite: true,
-      img: bishopImg,
+      img: 'assets/images/pieces/bishop_w.png',
     );
     newBoard[7][5] = ChessPiece(
       type: ChessPieceType.bishop,
       isWhite: true,
-      img: bishopImg,
+      img: 'assets/images/pieces/bishop_w.png',
     );
 
     // Place queen
     newBoard[0][3] = ChessPiece(
       type: ChessPieceType.queen,
       isWhite: false,
-      img: queenImg,
+      img: 'assets/images/pieces/queen_b.png',
     );
     newBoard[7][3] = ChessPiece(
       type: ChessPieceType.queen,
       isWhite: true,
-      img: queenImg,
+      img: 'assets/images/pieces/queen_w.png',
     );
 
     // Place king
     newBoard[0][4] = ChessPiece(
       type: ChessPieceType.king,
       isWhite: false,
-      img: kingImg,
+      img: 'assets/images/pieces/king_b.png',
     );
     newBoard[7][4] = ChessPiece(
       type: ChessPieceType.king,
       isWhite: true,
-      img: kingImg,
+      img: 'assets/images/pieces/king_w.png',
     );
 
     board = newBoard;
@@ -439,7 +529,7 @@ class _GameBoardState extends State<GameBoard> {
   }
 
 // MOVE PIECE
-  void movePiece(int newRow, int newCol) {
+  Future<void> movePiece(int newRow, int newCol) async {
     // if the new spot has an ennemy piece
     if (board[newRow][newCol] != null) {
       // add the captured piece to the approriate list
@@ -480,22 +570,29 @@ class _GameBoardState extends State<GameBoard> {
       validMoves = [];
     });
 
-    // check if it's check mate
+    // check if it's check mate and handle victory
     if (isCheckMate(!isWhiteTurn)) {
+      final winner = isWhiteTurn ? player1Name : player2Name;
+      await incrementScore(winner); // met à jour le scoreboard
       showDialog(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("CHECK MATE!"),
-            actions: [
-              TextButton(
-                onPressed: resetGame,
-                child: const Text("Play again"),
-              )
-            ],
-          );
-        },
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: Text("Bravo ! $winner a remporté la partie."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MenuScreen()),
+                );
+              },
+              child: const Text("Menu"),
+            ),
+          ],
+        ),
       );
+      return;
     }
 
     // change turn
@@ -613,92 +710,313 @@ class _GameBoardState extends State<GameBoard> {
     setState(() {});
   }
 
+  // Ajout des handlers pour les nouveaux boutons
+  Future<void> _offerDraw() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text('Match nul!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MenuScreen()),
+              );
+            },
+            child: const Text('Menu'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resign() async {
+    final loser = isWhiteTurn ? player1Name : player2Name;
+    final winner = isWhiteTurn ? player2Name : player1Name;
+    await incrementScore(winner);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Text('$loser abandonne. $winner remporte donc la partie !'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MenuScreen()),
+              );
+            },
+            child: const Text('Menu'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _cheat() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('todo'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const gridDelegate =
-        SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8);
+    const gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8);
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // WHITE PIECES TAKEN
-            Expanded(
-              child: GridView.builder(
-                itemCount: whiteKilledPieces.length,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: gridDelegate,
-                itemBuilder: (context, index) {
-                  return DeadPieces(
-                    imgPath: whiteKilledPieces[index]!.img,
-                    isWhite: true,
-                  );
-                },
-              ),
-            ),
-            // GAME STATUS
-            Text(checkStatus ? "CHECK!" : ""),
-            // CHESS BOARD
-            Expanded(
-              flex: 3,
-              child: GridView.builder(
-                itemCount: 8 * 8,
-                gridDelegate: gridDelegate,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  // get the row and col position of this square
-                  int row = index ~/ 8;
-                  int col = index % 8;
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF5122A3), Color(0xFF7C4BD1)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // STATUT DE CHECK
+              //Text(checkStatus ? "CHECK!" : ""),
 
-                  // check if the square is selected
-                  bool isSelected = row == selectedRow && col == selectedCol;
+              // --- NOUVEAU : INFO JOUEURS & TIMER ---
+              Padding(
+                // plus de marge à gauche/droite, moins de hauteur
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Joueur 1
+                    Column(
+                      children: [
+                        Image.asset('assets/images/player1.png', width: 60, height: 60),
+                        const SizedBox(height: 4),
+                        Text(
+                          player1Name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '$wins1 victoire${wins1 > 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Timer
+                    Column(
+                      children: [
+                        Image.asset('assets/images/timer.png', width: 60, height: 60),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatTime(isWhiteTurn ? whiteRemaining : blackRemaining),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7D56BF),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            'Au tour de\n${isWhiteTurn ? player1Name : player2Name}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                             color: Colors.white,
+                             fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Joueur 2
+                    Column(
+                      children: [
+                        Image.asset('assets/images/player2.png', width: 60, height: 60),
+                        const SizedBox(height: 4),
+                        Text(
+                          player2Name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '$wins2 victoire${wins2 > 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // --- FIN NOUVEAU ---
 
-                  // check if this square is a valid move
-                  bool isValidMove = false;
-                  for (var position in validMoves) {
-                    // compare row and col
-                    if (position[0] == row && position[1] == col) {
-                      isValidMove = true;
-                    }
-                  }
-                  return Square(
-                    isWhite: Helper.isWhite(index),
-                    piece: board[row][col],
-                    isSelected: isSelected,
-                    isValidMove: isValidMove,
-                    onTap: () => selectPiece(row, col),
-                  );
-                },
+              // WHITE PIECES TAKEN (just above the board)
+              Expanded(
+                child: GridView.builder(
+                  itemCount: whiteKilledPieces.length,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: gridDelegate,
+                  itemBuilder: (context, index) {
+                    return DeadPieces(
+                      imgPath: whiteKilledPieces[index]!.img,
+                      isWhite: true,
+                    );
+                  },
+                ),
               ),
-            ),
-            // BLACK PIECES TAKEN
-            Expanded(
-              child: GridView.builder(
-                itemCount: blackKilledPieces.length,
-                gridDelegate: gridDelegate,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return DeadPieces(
-                    imgPath: blackKilledPieces[index]!.img,
-                    isWhite: false,
-                  );
-                },
+
+              // CHESS BOARD
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(0),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F7FA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: GridView.builder(
+                          itemCount: 8 * 8,
+                          gridDelegate: gridDelegate,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            // get the row and col position of this square
+                            int row = index ~/ 8;
+                            int col = index % 8;
+
+                            // check if the square is selected
+                            bool isSelected = row == selectedRow && col == selectedCol;
+
+                            // check if this square is a valid move
+                            bool isValidMove = false;
+                            for (var position in validMoves) {
+                              // compare row and col
+                              if (position[0] == row && position[1] == col) {
+                                isValidMove = true;
+                              }
+                            }
+                            return Square(
+                              isWhite: Helper.isWhite(index),
+                              piece: board[row][col],
+                              isSelected: isSelected,
+                              isValidMove: isValidMove,
+                              onTap: () => selectPiece(row, col),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              // BLACK PIECES TAKEN (just below the board)
+              Expanded(
+                child: GridView.builder(
+                  itemCount: blackKilledPieces.length,
+                  gridDelegate: gridDelegate,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    return DeadPieces(
+                      imgPath: blackKilledPieces[index]!.img,
+                      isWhite: false,
+                    );
+                  },
+                ),
+              ),
+
+              // <-- NOUVEAU : boutons en bas -->
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    GestureDetector(
+                      onTap: _offerDraw,
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            'assets/images/draw.png',
+                            width: 50,
+                            height: 50,
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Nulle',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _resign,
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            'assets/images/abandon.png',
+                            width: 50,
+                            height: 50,
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Abandon',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _cheat,
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            'assets/images/triche.png',
+                            width: 50,
+                            height: 50,
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Triche',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-/*
-# Steps to create chess
- 1. Desgin game borad 
- 2. Place chess pieces
- 3. Select piece
- 4. Define logic of each pieces
- 5. Dead piece
- 6. Is kind is Checked?
-
-*/
