@@ -560,6 +560,20 @@ class _GameBoardState extends State<GameBoard> {
       }
     }
 
+    if (selectedPiece!.type == ChessPieceType.pawn &&
+        ((selectedPiece!.isWhite && newRow == 0) ||
+            (!selectedPiece!.isWhite && newRow == 7))) {
+      // Promotion en dame automatiquement
+      selectedPiece = ChessPiece(
+        type: ChessPieceType.queen,
+        isWhite: selectedPiece!.isWhite,
+        img:
+            selectedPiece!.isWhite
+                ? 'assets/images/pieces/queen_w.png'
+                : 'assets/images/pieces/queen_b.png',
+      );
+    }
+
     // move the piece and clear the old spot
     board[newRow][newCol] = selectedPiece;
     board[selectedRow][selectedCol] = null;
