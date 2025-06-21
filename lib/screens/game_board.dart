@@ -84,7 +84,7 @@ class _GameBoardState extends State<GameBoard> {
       });
       // timeout
       if (tpsRestantB == 0) _onTimeout(nomJ2);
-      if (tpsRestantN  == 0) _onTimeout(nomJ1);
+      if (tpsRestantN == 0) _onTimeout(nomJ1);
     });
   }
 
@@ -95,20 +95,21 @@ class _GameBoardState extends State<GameBoard> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: Text("$vainqueur a gagné par dépassement de temps !"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const MenuScreen()),
-              );
-            },
-            child: const Text('Menu'),
+      builder:
+          (_) => AlertDialog(
+            title: Text("$vainqueur a gagné par dépassement de temps !"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MenuScreen()),
+                  );
+                },
+                child: const Text('Menu'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -254,7 +255,9 @@ class _GameBoardState extends State<GameBoard> {
       }
       // déplacement si valide
       else if (selectedPiece != null &&
-          coupsValides.any((element) => element[0] == row && element[1] == col)) {
+          coupsValides.any(
+            (element) => element[0] == row && element[1] == col,
+          )) {
         movePiece(row, col);
       }
 
@@ -268,7 +271,11 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   // coups bruts
-  List<List<int>> calculateRawcoupsValides(int row, int col, ChessPiece? piece) {
+  List<List<int>> calculateRawcoupsValides(
+    int row,
+    int col,
+    ChessPiece? piece,
+  ) {
     List<List<int>> candidateMoves = [];
     if (piece == null) {
       return [];
@@ -505,17 +512,54 @@ class _GameBoardState extends State<GameBoard> {
       }
     }
 
+    // promotion pion
     if (selectedPiece!.type == ChessPieceType.pawn &&
         ((selectedPiece!.isWhite && newRow == 0) ||
             (!selectedPiece!.isWhite && newRow == 7))) {
-      // promotion dame
+      // liste des choix
+      final options = {
+        'Dame': 'queen',
+        'Tour': 'rook',
+        'Fou': 'bishop',
+        'Cavalier': 'knight',
+      };
+
+      // afficher popup
+      final choix = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (_) => AlertDialog(
+              title: const Text('Promotion'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children:
+                    options.entries.map((e) {
+                      final name = e.key;
+                      final type = e.value;
+                      final imgPath =
+                          selectedPiece!.isWhite
+                              ? 'assets/images/pieces/${type}_w.png'
+                              : 'assets/images/pieces/${type}_b.png';
+                      return ListTile(
+                        leading: Image.asset(imgPath, width: 24, height: 24),
+                        title: Text(name),
+                        onTap: () => Navigator.pop(context, type),
+                      );
+                    }).toList(),
+              ),
+            ),
+      );
+
+      // si pb, on reste en dame
+      final promo = choix ?? 'queen';
       selectedPiece = ChessPiece(
-        type: ChessPieceType.queen,
+        type: ChessPieceType.values.firstWhere((t) => t.name == promo),
         isWhite: selectedPiece!.isWhite,
         img:
             selectedPiece!.isWhite
-                ? 'assets/images/pieces/queen_w.png'
-                : 'assets/images/pieces/queen_b.png',
+                ? 'assets/images/pieces/${promo}_w.png'
+                : 'assets/images/pieces/${promo}_b.png',
       );
     }
 
@@ -571,8 +615,7 @@ class _GameBoardState extends State<GameBoard> {
 
   bool isKingInCheck(bool isWhiteKing) {
     // pos roi
-    List<int> kingPosition =
-        isWhiteKing ? posKingB : posKingN;
+    List<int> kingPosition = isWhiteKing ? posKingB : posKingN;
 
     // check si roi en échec
     for (int i = 0; i < 8; i++) {
@@ -613,8 +656,7 @@ class _GameBoardState extends State<GameBoard> {
     // pour le roi, save sa pos originale
     List<int>? originalKingPosition;
     if (piece.type == ChessPieceType.king) {
-      originalKingPosition =
-          piece.isWhite ? posKingB : posKingN;
+      originalKingPosition = piece.isWhite ? posKingB : posKingN;
       // update sa pos
       if (piece.isWhite) {
         posKingB = [endRow, endCol];
@@ -791,8 +833,7 @@ class _GameBoardState extends State<GameBoard> {
         final data = jsonDecode(response.body);
         sanMove = data['san']; // meilleur coup (SAN)
         uciMove = data['move'];
-        String text =
-            data['text'];
+        String text = data['text'];
         // extract du commentaire
         int idx = text.indexOf(']. ');
         if (idx != -1) {
@@ -804,7 +845,7 @@ class _GameBoardState extends State<GameBoard> {
         comment = comment
             .replaceAll('White is winning', 'Les Blancs ont l\'avantage')
             .replaceAll('Black is winning', 'Les Noirs ont l\'avantage');
-            } else {
+      } else {
         errorMessage =
             "Erreur ${response.statusCode} : échec de l'analyse du coup.";
       }
@@ -979,9 +1020,7 @@ class _GameBoardState extends State<GameBoard> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _formatTime(
-                            tourBlanc ? tpsRestantB : tpsRestantN,
-                          ),
+                          _formatTime(tourBlanc ? tpsRestantB : tpsRestantN),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
