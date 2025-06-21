@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 class DeadPieces extends StatelessWidget {
   final String imgPath;
   final bool isWhite;
-  const DeadPieces({
-    Key? key,
-    required this.imgPath,
-    required this.isWhite,
-  }) : super(key: key);
+  const DeadPieces({super.key, required this.imgPath, required this.isWhite});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +11,7 @@ class DeadPieces extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Image.asset(
         imgPath,
-        color: Colors.grey.withOpacity(0.5),
+        color: Colors.grey.withAlpha((0.5 * 255).toInt()),
         colorBlendMode: BlendMode.srcATop,
         width: 50,
         height: 50,

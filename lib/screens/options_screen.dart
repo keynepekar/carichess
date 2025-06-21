@@ -41,27 +41,35 @@ class _OptionsScreenState extends State<OptionsScreen> {
   Future<void> _saveOptions() async {
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setString('player1', _player1Controller.text.isNotEmpty
-        ? _player1Controller.text
-        : 'Joueur 1');
+    await prefs.setString(
+      'player1',
+      _player1Controller.text.isNotEmpty ? _player1Controller.text : 'Joueur 1',
+    );
 
-    await prefs.setString('player2', _player2Controller.text.isNotEmpty
-        ? _player2Controller.text
-        : 'Joueur 2');
+    await prefs.setString(
+      'player2',
+      _player2Controller.text.isNotEmpty ? _player2Controller.text : 'Joueur 2',
+    );
 
     final timerValue = int.tryParse(_timerController.text);
     if (timerValue != null && timerValue >= 1 && timerValue <= 60) {
       await prefs.setInt('timer', timerValue);
     } else {
-      await prefs.setInt('timer', 5); // fallback valeur par défaut si mauvais input
+      await prefs.setInt(
+        'timer',
+        5,
+      ); // fallback valeur par défaut si mauvais input
       setState(() {
         _timerController.text = '5';
       });
     }
   }
 
-  Widget _buildInputField(String label, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildInputField(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -81,7 +89,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
           width: 265,
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withAlpha((0.5 * 255).toInt()),
             borderRadius: BorderRadius.circular(10),
           ),
           child: TextField(
@@ -202,6 +210,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
                 child: GestureDetector(
                   onTap: () async {
                     await _saveOptions();
+                    // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   },
                   child: Container(

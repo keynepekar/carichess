@@ -9,13 +9,13 @@ class Square extends StatelessWidget {
   final VoidCallback onTap;
   final bool isValidMove;
   const Square({
-    Key? key,
+    super.key,
     required this.isWhite,
     this.piece,
     required this.isSelected,
     required this.onTap,
     required this.isValidMove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
